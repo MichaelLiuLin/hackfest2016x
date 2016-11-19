@@ -11,7 +11,8 @@ var websocketServerApi 	= 	require("./ws-api");
 // Global variables
 var fixtureService 		= 	new websocketServerApi({
 								port: 			3000,
-								verbose: 		true
+								verbose: 		true,
+								onConnection: 	setAllFixturesToBlack
 							});
 var defaults 			= 	{
 								universe: 		1,
@@ -28,36 +29,31 @@ var defaults 			= 	{
 							}
 
 // dictionary that maps each device to its assigned color
-var color_dict = {};
+var device_colors = {};
 
 // steps through the colors for each new device
 var next_color = 0;
 
-/* _updateFixtureColor
- * Updates local in-memory collection of fixture and their current colour
- * fixture_id: byte, the start channel for the fixture corresponding with the fixture_id in fixtures.js
- * color: object, { r: byte, g: byte, b: byte }
- */ 
-
-// TODO: Add hook to onDataChange from tracking service
+// GIS data RESTful API
 var positioning_data_url = "http://192.168.0.151:8080/getalldevices";
+
+
 function getLastestPositioningData () {
 	http.get(positioning_data_url, _onConnectionToPositionService).on("error", _onConnectionErrorToPositionService);
 }
 
-function _merge_colors(devices) {
+function addColorsFromMultipleDevices(devices) {
     var result = { r:0, g:0, b:0 };
-    for (var dev of devices) {
-		if (!(dev.name in color_dict)) {
-		    var c = palette[next_color % palette.length];
-		    color_dict[dev.name] = { r:c[0], g:c[1], b:c[2] };
-		    // console.log("ASSIGNED COLOR ", c, " TO ", dev.name);
+    for (var device of devices) {
+		if (!(device.name in device_colors)) {
+		    var color = palette[next_color % palette.length];
+		    device_colors[device.name] = { r: color[0], g: color[1], b: color[2] };
 		    next_color += 1;
 		}
-		var c = color_dict[dev.name];
-		result.r += c.r;
-		result.g += c.g;
-		result.b += c.b;
+		var color = device_colors[device.name];
+		result.r += color.r;
+		result.g += color.g;
+		result.b += color.b;
     }
     result.r = Math.min(result.r, 255);
     result.g = Math.min(result.g, 255);
@@ -66,19 +62,19 @@ function _merge_colors(devices) {
     return result;
 }
 
-function _onConnectionToPositionService (res) {
+function _onConnectionToPositionService (positionService) {
     var body = '';
 
-    res.on('data', function(chunk){
+    positionService.on("data", function(chunk){
         body += chunk;
     });
 
-    res.on('end', function() {
+    positionService.on("end", function() {
         var fixtures  = JSON.parse(body);
 		for (var fixture of fixtures) {
 		    if (fixture.devices.length > 0) {
 				// merge colors here
-				merged_color = _merge_colors(fixture.devices);
+				merged_color = addColorsFromMultipleDevices(fixture.devices);
 				_updateFixtureColor(fixture.fixture_id, merged_color);
 		    }
 		}
@@ -88,6 +84,12 @@ function _onConnectionToPositionService (res) {
 function _onConnectionErrorToPositionService (e) {
     console.log("CONNECTION ERROR".red.bold, e);
 }
+
+/* _updateFixtureColor
+ * Updates local in-memory collection of fixture and their current colour
+ * fixture_id: byte, the start channel for the fixture corresponding with the fixture_id in fixtures.js
+ * color: object, { r: byte, g: byte, b: byte }
+ */ 
 
 function _updateFixtureColor (id, color) {
 	for (var i = 0; i < fixtures.length; i++) {
@@ -128,16 +130,40 @@ function sendColorToFixtures () {
 			defaults.p
 		]; 
 
-		fixtureService.send(payload);
-		// console.log("PAYLOAD".yellow.bold, payload);
+		fixtureService.send(payload, {binary: true, mask: true});
+		// console.log("TO COLOR".yellow.bold, payload);
+	}
+}
+
+function setAllFixturesToBlack () {
+	
+	for (var fixture of fixtures) {
+
+		var payload = [
+			defaults.universe,
+			fixture.fixture_id,
+			returnByteDivide(defaults.delay),
+			returnByteModulo(defaults.delay),
+			returnByteDivide(defaults.duration),
+			returnByteModulo(defaults.duration),
+			defaults.intensity,
+			defaults.soundMode,
+			defaults.strobeMode,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0
+		]; 
+
+		fixtureService.send(payload, {binary: true, mask: true});
+		// console.log("TO BLACK".yellow.bold, payload);
 	}
 }
 
 setInterval(getLastestPositioningData, defaults.dataInterval);
 setInterval(sendColorToFixtures, defaults.colorInterval);
-
-getLastestPositioningData();
-sendColorToFixtures();
 
 function returnByteModulo (value)	{ return value % 256; }
 function returnByteDivide (value)	{ return parseInt(value / 256); }
