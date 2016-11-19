@@ -1,6 +1,6 @@
 // Library imports
 var colors 				= 	require("colors");
-var http                = require("http");
+var http                = 	require("http");
 var webSocketServer 	= 	require("ws").Server;
 
 // Application imports
