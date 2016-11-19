@@ -9,7 +9,7 @@ import urllib.request
 import json
 import time
 
-phones = {}
+devices = {}
 
 def updated(old_prop, new_prop):
     oldtime = old_prop["clientSeenString"][11:]
@@ -39,10 +39,10 @@ for i in range(0, 100):
     for phone in data['features']:
         prop = phone["properties"]
         name = prop["name"]
-        if name in phones:
-            oldp = phones[name]
+        if name in devices:
+            oldp = devices[name]
             updated(oldp, prop)
-        phones[name] = prop
+        devices[name] = prop
     time.sleep(1.0)
 
 
