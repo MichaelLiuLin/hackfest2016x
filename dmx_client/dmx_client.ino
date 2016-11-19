@@ -77,6 +77,7 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t len) {
 					for(byte x = 0; x < (len); x++){
 						i[payload[1]-1+x] = instruction(millis()+(payload[2] * 256 + payload[3]), (uint16_t) payload[4] * 256 + payload[5] , v[payload[1]-1+x], payload[6+x]);
 					}
+					Serial.print("Received data");
 				break;
 				case 254:
 					Serial.print("Reboot Flag Sent");
@@ -139,7 +140,7 @@ void tween () {
 
 
 void setup () {
-	wifiManager.resetSettings();
+
 	Serial.begin(9600);
 
 	pinMode(BUTTTON, INPUT_PULLUP);
@@ -152,7 +153,7 @@ void setup () {
 	wifiManager.addParameter(&custom_server_url);
 	wifiManager.addParameter(&custom_server_port);
 
-	wifiManager.autoConnect("ESP8266-DMX", "micslab");
+	wifiManager.autoConnect("ESP8266-DMX", "talktomic");
 
 	// Settings are 
 	strcpy(server_url, custom_server_url.getValue());
