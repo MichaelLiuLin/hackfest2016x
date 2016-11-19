@@ -16,14 +16,14 @@ var fixtureService 		= 	new websocketServerApi({
 var defaults 			= 	{
 								universe: 	1,
 								delay: 		0,
-								duration: 	1000,
+								duration: 	3000,
 								intensity: 	255,
 								soundMode: 	0,
 								strobeMode: 0,
 								w: 			0,
 								a: 			0,
 								p: 			0,
-								updateFreq: 250
+								updateFreq: 5000
 							}
 
 // dictionary that maps each device to its assigned color
@@ -39,7 +39,7 @@ var next_color = 0;
  */ 
 
 // TODO: Add hook to onDataChange from tracking service
-var url = "http://localhost:8080/getalldevices";
+var url = "http://192.168.0.151:8080/getalldevices";
 
 http.get(url, _onConnectionToPositionService).on("error", _onConnectionErrorToPositionService);
 
