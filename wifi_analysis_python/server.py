@@ -55,7 +55,8 @@ def inside(fix, lat, lng):
     dy = (lat - fix["lat"]) * metres_per_degree
     dx = (lng - fix["lng"]) * metres_per_degree
     sq = dx * dx + dy * dy
-    result = sq <= 20 * 20
+    radius = fix["radius"]
+    result = sq <= radius * radius
     # print(dx, dy, sq, result)
     return result
 
@@ -80,28 +81,41 @@ def test():
 @route('/getdevices')
 def find_devices():
     fixture_id = request.query.id
-    print("Receive the request for fixture:", fixture_id, type(fixture_id))
+    print("Received request for fixture:", fixture_id)
     update_all_devices()
     if fixture_id not in fixtures.keys():
         return "ERROR: unknown fixture ID " + fixture_id
     f = fixtures[fixture_id]
     nearby = find_nearby(f)
-
-    # store_locations = etl.fromcsv("store_locations.csv")
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Content-type'] = 'application/json'
-    nearby_json = json.dumps(nearby)
+    nearby_json = json.dumps(nearby, indent=4)
     return '{ "fixture_id":' + fixture_id + ', "nearby":' + nearby_json + ' }'
+
+
+@route('/getalldevices')
+def find_all_devices():
+    print("Received request for ALL fixtures")
+    update_all_devices()
+    result = {}
+    for (fixture_id, f) in fixtures.items():
+        nearby = find_nearby(f)
+        result[fixture_id] = nearby
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Content-type'] = 'application/json'
+    result_json = json.dumps(result, sort_keys=True, indent=4)
+    return result_json
 
 
 # read fixtures
 with open(CONFIG) as config:
-    the_page = config.read()  #.decode(encoding="UTF-8")
+    the_page = config.read()
     fixs = json.loads(the_page)
+    print("Lighting Fixtures")
     for f in fixs:
         id = str(f["id"])
-        print("Fixture", f, type(f))
         fixtures[id] = f
+        print("Fixture,{},{},{}".format(id, f["lat"], f["lng"]))
 
 
 # Some tests: should print True, False
