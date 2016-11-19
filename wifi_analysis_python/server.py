@@ -24,6 +24,13 @@ devices = {}
 fixtures = {}
 
 
+class Fixture():
+    """Fixture objects returned by this server."""
+    def __init__(self, fix_id, devs):
+        self.fixture_id = fix_id
+        self.devices = devs
+
+
 def update_all_devices():
     req = urllib.request.Request(WIFI_PAGE)
     with urllib.request.urlopen(req) as response:
@@ -92,22 +99,24 @@ def find_devices():
         return "ERROR: unknown fixture ID " + fixture_id
     f = fixtures[fixture_id]
     nearby = find_nearby(f)
+    result = {"fixture_id": fixture_id, "devices": nearby}
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Content-type'] = 'application/json'
-    nearby_json = json.dumps(nearby, indent=4)
-    return '{ "fixture_id":' + fixture_id + ', "nearby":' + nearby_json + ' }'
+    print(type(result), result)
+    return json.dumps(result, indent=4)
 
 
 @route('/getalldevices')
 def find_all_devices():
     print("Received request for ALL fixtures")
     update_all_devices()
-    result = {}
+    result = []
     for (fixture_id, f) in fixtures.items():
         nearby = find_nearby(f)
-        result[fixture_id] = nearby
+        result.append({"fixture_id": fixture_id, "devices": nearby})
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Content-type'] = 'application/json'
+    result.sort(key=lambda f: f["fixture_id"])
     result_json = json.dumps(result, sort_keys=True, indent=4)
     return result_json
 
