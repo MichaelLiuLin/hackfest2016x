@@ -1,6 +1,6 @@
 var exports = module.exports = {};
 
-var colors = {
+var colors = [
 	[255,0,0],
 	[153,0,0],
 	[76,0,132],
@@ -21,6 +21,6 @@ var colors = {
 	[61,82,91],
 	[206,119,13],
 	[0,255,153]
-};
+];
 
 exports.palette = colors;
