@@ -12,6 +12,9 @@ import json
 CONFIG = "config.js"  # locations of light fixtures
 SERVER = "lsyfkbcca3.execute-api.ap-southeast-2.amazonaws.com"
 WIFI_PAGE = "https://" + SERVER + "/prod/CMX-receiver/lastest"
+# Top N devices for each light fixture
+TOP_N = 3
+
 
 # This dictionary maps Device IDs to a dictionary of properties
 devices = {}
@@ -70,7 +73,9 @@ def find_nearby(fix):
         lng = dev["lng"]
         if inside(fix, lat, lng):
             result.append(dev)
-    return result
+    # Now sort them with highest priority (speed) first
+    result.sort(key=lambda d: d["speed"], reverse=True)
+    return result[0:TOP_N]
 
 
 @route('/hello')
