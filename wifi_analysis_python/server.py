@@ -13,7 +13,7 @@ CONFIG = "config.js"  # locations of light fixtures
 SERVER = "lsyfkbcca3.execute-api.ap-southeast-2.amazonaws.com"
 WIFI_PAGE = "https://" + SERVER + "/prod/CMX-receiver/lastest"
 # Top N devices for each light fixture
-TOP_N = 3
+TOP_N = 1
 
 
 # This dictionary maps Device IDs to a dictionary of properties
@@ -60,15 +60,15 @@ def update(old_prop, new_prop):
             print(oldtime, newtime, oldepoch, newepoch, speed)
 
 
-def inside(fix, lat, lng):
+def distance2(fix, lat, lng):
     metres_per_degree = 111111.0  # 111.111km per degree, roughly
     dy = (lat - fix["lat"]) * metres_per_degree
     dx = (lng - fix["lng"]) * metres_per_degree
     sq = dx * dx + dy * dy
-    radius = fix["radius"]
-    result = sq <= radius * radius
+    # radius = fix["radius"]
+    return sq # <= radius * radius
     # print(dx, dy, sq, result)
-    return result
+    # return result
 
 
 def find_nearby(fix):
@@ -78,10 +78,13 @@ def find_nearby(fix):
     for dev in devices.values():
         lat = dev["lat"]
         lng = dev["lng"]
-        if inside(fix, lat, lng):
+        speed = dev["speed"]
+        dist = distance2(fix, lat, lng)
+        if dist < 20*20:
+            dev["distance"] = dist - speed
             result.append(dev)
     # Now sort them with highest priority (speed) first
-    result.sort(key=lambda d: d["speed"], reverse=True)
+    result.sort(key=lambda d: d["distance"]) #, reverse=True)
     return result[0:TOP_N]
 
 
@@ -138,4 +141,4 @@ f10 = fixtures["10"]
 print("Should be True", inside(f1, f1["lat"], f1["lng"]))
 print("Should be False", inside(f1, f10["lat"], f10["lng"]))
 
-run(host='localhost', port=8080, debug=True)
+run(host='192.168.0.151', port=8080, debug=True)
