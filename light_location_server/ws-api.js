@@ -30,7 +30,6 @@ function serverWSApi (options) {
 
 		if (options.onConnection !== undefined) {
 			options.onConnection(socket);
-			sckPool.splice(i, 1);
 		}
 		
 	}
