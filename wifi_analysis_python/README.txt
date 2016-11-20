@@ -27,3 +27,20 @@ Each property_dictionary contains:
   "clientManufacturer": "Huawei Technologies"
   "clientSeenEpoch": int seconds since 1970
   "time_interval_secs": int seconds since previous entry
+
+
+RUNNING
+======
+This web service monitors the SCC Wifi access point data for King's
+Beach and keeps track of the devices that are closest to each light
+fixture.  It returns this data in JSON format as a web service.
+
+To run this web service program, just do 'python3 server.py'.
+You will need to change the IP address on the last line of the
+script to match the IP address of the server you are running it on.
+
+Then you can use any web browser to test it out, for example:
+   http://<server.ip.address>:8080/getalldevices
+ or
+   http://<server.ip.address>:8080/getdevices?id=10
+
